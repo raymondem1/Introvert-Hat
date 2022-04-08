@@ -6,3 +6,6 @@ The hat runs on the YOLOv5 framework and that does most of the heavy lifting. Al
 
 
 All credit for the computer vision goes to the people who created and worked on the yolov5 framework. My code is just a fun add on
+
+
+To run this code, install all necessary files for the yolov5 framework and then run the python script "runHat2.py"
