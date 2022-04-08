@@ -25,11 +25,11 @@ Usage - formats:
 """
 
 import argparse
+from glob import glob
 import os
 from shutil import copy2
 import sys
 from pathlib import Path
-from playsound import playsound
 
 import cv2
 from matplotlib.pyplot import text
@@ -38,10 +38,21 @@ import torch.backends.cudnn as cudnn
 import serial
 from serial import Serial
 import time
+from playsound import playsound
+#import multiprocessing
+#from pygame import mixer
 
+#mixer.init()
+
+#mixer.music.load('introvert.wav')
+
+chaseStart = 0
 chasing = 1
-musica = 0
-ArduinoSerial=serial.Serial('COM5',9600,timeout=0.1)
+dogStart = 0
+dogChase = 1
+#intro = multiprocessing.Process(target=playsound, args=("introvert.wav",))
+#doggo = multiprocessing.Process(target=playsound, args=("dog.wav",))
+#ArduinoSerial=serial.Serial('COM5',9600,timeout=0.1)
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -86,7 +97,12 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         dnn=False,  # use OpenCV DNN for ONNX inference
         ):
     global chasing
-    global musica
+    global chaseStart
+    global dogChase
+    global dogChase
+    spacer = 0
+    StartSpacer = 0
+
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
     is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
@@ -183,43 +199,56 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     #i added this too
                     #print(c1)
                     #print(c2)
-                    #here is where you are going to check to see what is what
+                    #here is where you are going to ;
+                    # check to see what is what
                     #like, this is where we determine if something is in the picture
                     #we can make a variable so that it'll only chase one
                     #then all we really need to do is either make a function
                     #or something to actually get the x coords and then we can send
                     #the arduino values to the serial monitor
-                    #change this to cup or bottle
                     if("person" in s):
                         chasing = 2
-                        musica =1
-                        if(chasing ==2):
-                            if(chasing ==2 and musica ==1):
-                                playsound('otherElf.wav')
-                                musica = 3
-                            #print(c1)
-                            thepos= center_point[0]
-                            #print(thepos)
-                            subby = ("X" + str(thepos))
-                            #Serial.Write(subby)
-                            #print(subby)
-                            ArduinoSerial.write(subby.encode('utf-8'))
-                            read= str(ArduinoSerial.readline(ArduinoSerial.inWaiting()))
-                            time.sleep(0.05)
-                            print('data from arduino:'+read)
-                            
-                            #splitting = c2.split(',')[0]
-                            #splitting[1:]
-                            #splitting = "X" + splitting
-                            #print(splitting)
-                            #serial.write(splitting)
-                            #print("youu little bitch")
-                            #LOGGER.info("slut")
-                            #chasing = 2
-                            #if(chasing ==2):
-                                #print("gottem")
+                        spacer = 0
+                        if(chasing == 2 and chaseStart ==0):
+                            while(StartSpacer <3000):
+                                print(StartSpacer)
+                                StartSpacer +=1
+                            playsound('introvert.wav')
+                            chaseStart = 1
+                            while(spacer <2000):
+                                print(spacer)
+                                spacer +=1
+                            #mixer.music.play()
+                            #chasing = 3
+                            #chaseStart = 1
+                        chaseStart =0
                     else:
-                        chasing = 1
+                        chaseStart = 0
+                        spacer = 0
+                        s= "other"
+                        '''
+                        if(chasing == 2 and chaseStart ==1):
+                            chaseStart=0
+                            chasing=1
+                        '''
+                    '''''
+                    if("dog" in s and "person" not in s):
+                        dogChase = 2
+                        spacer = 0
+                        if(dogChase ==2 and dogStart == 0):
+                            playsound('dog.wav')
+                            while(spacer <35):
+                                print(spacer)
+                                spacer +=1
+                            #dogChase =3
+                            #dogStart = 1
+                    if("dog" not in s or "person" not in s):
+                        dogStart = 0
+                        dogChase =1
+                        if(dogStart == 3 and dogChase ==1):
+                            dogChase=0
+                            dogStart=1
+                    '''
 
 
                 #maybe here
@@ -316,6 +345,7 @@ def main(opt):
     run(**vars(opt))
 
 
+    
 if __name__ == "__main__":
     opt = parse_opt()
     main(opt)

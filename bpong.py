@@ -38,9 +38,11 @@ import torch.backends.cudnn as cudnn
 import serial
 from serial import Serial
 import time
+import keyboard
 
 chasing = 1
 musica = 0
+buffer = 0
 ArduinoSerial=serial.Serial('COM5',9600,timeout=0.1)
 
 FILE = Path(__file__).resolve()
@@ -60,7 +62,8 @@ from utils.torch_utils import select_device, time_sync
 @torch.no_grad()
 def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         source=ROOT / 'data/images',  # file/dir/URL/glob, 0 for webcam
-        data=ROOT / 'data/coco128.yaml',  # dataset.yaml path
+        #if this doesn't work just switch the line under this back to coco128.yaml after the 'data/
+        data=ROOT / 'data/BeerPong.yaml',  # dataset.yaml path
         imgsz=(640, 640),  # inference size (height, width)
         conf_thres=0.25,  # confidence threshold
         iou_thres=0.45,  # NMS IOU threshold
@@ -87,6 +90,7 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         ):
     global chasing
     global musica
+    global buffer
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
     is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
@@ -171,8 +175,12 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     #c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]))
                     #c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]))
                     c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
-                    center_point = round((c1[0]+c2[0])/2), round((c1[1]+c2[1])/2)
-                    #center_point = round((c1[0]+c2[0])/2)
+
+                    #get the top point, it should be one of these next two, just try to figure it out by seeing which one is higher maybe. idk fuck
+                    #fuck meeee cunt cunt cnt cnt cnt cunt cunt cunt cunt cunt cunt cunt cunt cunt cnt cnt cunt cnt cunt cunt cnt cnt cunt
+                    center_point = round((c1[0]+c2[0])/2), round((c1[1]))
+                    #try this one if it doesnt work
+                    #center_point1 = round((c1[0]+c2[0])/2), round((c2[1]))                    #center_point = round((c1[0]+c2[0])/2)
                     circle = cv2.circle(im0,center_point,5,(0,255,0),2)
                     text_coord = cv2.putText(im0,str(center_point),center_point,cv2.FONT_HERSHEY_PLAIN,2,(0,0,255))
 
@@ -190,37 +198,23 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     #or something to actually get the x coords and then we can send
                     #the arduino values to the serial monitor
                     #change this to cup or bottle
-                    if("person" in s):
-                        chasing = 2
-                        musica =1
-                        if(chasing ==2):
-                            if(chasing ==2 and musica ==1):
-                                playsound('otherElf.wav')
-                                musica = 3
-                            #print(c1)
-                            thepos= center_point[0]
-                            #print(thepos)
-                            subby = ("X" + str(thepos))
-                            #Serial.Write(subby)
-                            #print(subby)
-                            ArduinoSerial.write(subby.encode('utf-8'))
-                            read= str(ArduinoSerial.readline(ArduinoSerial.inWaiting()))
-                            time.sleep(0.05)
-                            print('data from arduino:'+read)
-                            
-                            #splitting = c2.split(',')[0]
-                            #splitting[1:]
-                            #splitting = "X" + splitting
-                            #print(splitting)
-                            #serial.write(splitting)
-                            #print("youu little bitch")
-                            #LOGGER.info("slut")
-                            #chasing = 2
-                            #if(chasing ==2):
-                                #print("gottem")
-                    else:
-                        chasing = 1
 
+                    if(keyboard.is_pressed('q')):
+                        while(buffer<2000):
+                            print(buffer)
+                            buffer+=1
+                        #print(c1)
+                        thepos= center_point[0]
+                        thepos1= center_point[1]
+                        #print(thepos)
+                        subby = ("X" + str(thepos) + "Y" + str(thepos1))
+                        Serial.Write(subby)
+                        #print(subby)
+                        ArduinoSerial.write(subby.encode('utf-8'))
+                        #read= str(ArduinoSerial.readline(ArduinoSerial.inWaiting()))
+                        #time.sleep(0.05)
+                        #print('data from arduino:'+read)
+                        buffer=0
 
                 #maybe here
                 # Write results
@@ -281,7 +275,8 @@ def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'yolov5s.pt', help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
-    parser.add_argument('--data', type=str, default=ROOT / 'data/coco128.yaml', help='(optional) dataset.yaml path')
+    #if this doesn't work, change the bottom line to coco128.yaml after the 'data/
+    parser.add_argument('--data', type=str, default=ROOT / 'data/BeerPong.yaml', help='(optional) dataset.yaml path')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='NMS IoU threshold')

@@ -1,0 +1,6 @@
+path: C:\Users\raymo\yolov5\data\train_data
+train: train
+val: test
+# Classes
+nc: 1  # number of classes
+names: ['cup']  # class names

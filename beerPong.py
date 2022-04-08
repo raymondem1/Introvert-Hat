@@ -25,11 +25,11 @@ Usage - formats:
 """
 
 import argparse
+from glob import glob
 import os
 from shutil import copy2
 import sys
 from pathlib import Path
-from playsound import playsound
 
 import cv2
 from matplotlib.pyplot import text
@@ -38,10 +38,23 @@ import torch.backends.cudnn as cudnn
 import serial
 from serial import Serial
 import time
+from playsound import playsound
+import winsound
 
+#import multiprocessing
+#from pygame import mixer
+
+#mixer.init()
+
+#mixer.music.load('introvert.wav')
+
+chaseStart = 0
 chasing = 1
-musica = 0
-ArduinoSerial=serial.Serial('COM5',9600,timeout=0.1)
+dogStart = 0
+dogChase = 1
+#intro = multiprocessing.Process(target=playsound, args=("introvert.wav",))
+#doggo = multiprocessing.Process(target=playsound, args=("dog.wav",))
+#ArduinoSerial=serial.Serial('COM5',9600,timeout=0.1)
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
@@ -60,7 +73,7 @@ from utils.torch_utils import select_device, time_sync
 @torch.no_grad()
 def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         source=ROOT / 'data/images',  # file/dir/URL/glob, 0 for webcam
-        data=ROOT / 'data/coco128.yaml',  # dataset.yaml path
+        data=ROOT / 'data/BeerPong.yaml',  # dataset.yaml path
         imgsz=(640, 640),  # inference size (height, width)
         conf_thres=0.25,  # confidence threshold
         iou_thres=0.45,  # NMS IOU threshold
@@ -86,7 +99,12 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
         dnn=False,  # use OpenCV DNN for ONNX inference
         ):
     global chasing
-    global musica
+    global chaseStart
+    global dogChase
+    global dogChase
+    spacer = 0
+    StartSpacer = 0
+
     source = str(source)
     save_img = not nosave and not source.endswith('.txt')  # save inference images
     is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
@@ -171,8 +189,11 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     #c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]))
                     #c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]))
                     c1, c2 = (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3]))
-                    center_point = round((c1[0]+c2[0])/2), round((c1[1]+c2[1])/2)
-                    #center_point = round((c1[0]+c2[0])/2)
+                    #get the top point, it should be one of these next two, just try to figure it out by seeing which one is higher maybe. idk fuck
+                    #fuck meeee cunt cunt cnt cnt cnt cunt cunt cunt cunt cunt cunt cunt cunt cunt cnt cnt cunt cnt cunt cunt cnt cnt cunt
+                    center_point = round((c1[0]+c2[0])/2), round((c1[1]))
+                    #try this one if it doesnt work
+                    #center_point1 = round((c1[0]+c2[0])/2), round((c2[1]))
                     circle = cv2.circle(im0,center_point,5,(0,255,0),2)
                     text_coord = cv2.putText(im0,str(center_point),center_point,cv2.FONT_HERSHEY_PLAIN,2,(0,0,255))
 
@@ -183,43 +204,48 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
                     #i added this too
                     #print(c1)
                     #print(c2)
-                    #here is where you are going to check to see what is what
+                    #here is where you are going to ;
+                    # check to see what is what
                     #like, this is where we determine if something is in the picture
                     #we can make a variable so that it'll only chase one
                     #then all we really need to do is either make a function
                     #or something to actually get the x coords and then we can send
                     #the arduino values to the serial monitor
-                    #change this to cup or bottle
                     if("person" in s):
                         chasing = 2
-                        musica =1
-                        if(chasing ==2):
-                            if(chasing ==2 and musica ==1):
-                                playsound('otherElf.wav')
-                                musica = 3
-                            #print(c1)
-                            thepos= center_point[0]
-                            #print(thepos)
-                            subby = ("X" + str(thepos))
-                            #Serial.Write(subby)
-                            #print(subby)
-                            ArduinoSerial.write(subby.encode('utf-8'))
-                            read= str(ArduinoSerial.readline(ArduinoSerial.inWaiting()))
-                            time.sleep(0.05)
-                            print('data from arduino:'+read)
-                            
-                            #splitting = c2.split(',')[0]
-                            #splitting[1:]
-                            #splitting = "X" + splitting
-                            #print(splitting)
-                            #serial.write(splitting)
-                            #print("youu little bitch")
-                            #LOGGER.info("slut")
-                            #chasing = 2
-                            #if(chasing ==2):
-                                #print("gottem")
+                        if(chasing == 2 and chaseStart ==0):
+                            winsound.PlaySound('introvert2.wav', winsound.SND_ASYNC)
+                            chaseStart=1
+                            #mixer.music.play()
+                            #chasing = 3
+                            #chaseStart = 1
                     else:
-                        chasing = 1
+                        s= "other"
+                        winsound.PlaySound(None, winsound.SND_PURGE)
+                        chaseStart = 0
+                        '''
+                        if(chasing == 2 and chaseStart ==1):
+                            chaseStart=0
+                            chasing=1
+                        '''
+                    '''''
+                    if("dog" in s and "person" not in s):
+                        dogChase = 2
+                        spacer = 0
+                        if(dogChase ==2 and dogStart == 0):
+                            playsound('dog.wav')
+                            while(spacer <35):
+                                print(spacer)
+                                spacer +=1
+                            #dogChase =3
+                            #dogStart = 1
+                    if("dog" not in s or "person" not in s):
+                        dogStart = 0
+                        dogChase =1
+                        if(dogStart == 3 and dogChase ==1):
+                            dogChase=0
+                            dogStart=1
+                    '''
 
 
                 #maybe here
@@ -245,8 +271,10 @@ def run(weights=ROOT / 'yolov5s.pt',  # model.pt path(s)
             # Stream results
             im0 = annotator.result()
             if view_img:
-                cv2.imshow(str(p), im0)
-                cv2.waitKey(1)  # 1 millisecond
+                cv2.namedWindow("window", cv2.WND_PROP_FULLSCREEN) 
+                cv2.setWindowProperty("window", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN) 
+                cv2.imshow("window", im0) 
+                cv2.waitKey(1) # 1 millisecond
 
             # Save results (image with detections)
             if save_img:
@@ -281,7 +309,7 @@ def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default=ROOT / 'yolov5s.pt', help='model path(s)')
     parser.add_argument('--source', type=str, default=ROOT / 'data/images', help='file/dir/URL/glob, 0 for webcam')
-    parser.add_argument('--data', type=str, default=ROOT / 'data/coco128.yaml', help='(optional) dataset.yaml path')
+    parser.add_argument('--data', type=str, default=ROOT / 'data/BeerPong.yaml', help='(optional) dataset.yaml path')
     parser.add_argument('--imgsz', '--img', '--img-size', nargs='+', type=int, default=[640], help='inference size h,w')
     parser.add_argument('--conf-thres', type=float, default=0.25, help='confidence threshold')
     parser.add_argument('--iou-thres', type=float, default=0.45, help='NMS IoU threshold')
@@ -316,6 +344,7 @@ def main(opt):
     run(**vars(opt))
 
 
+    
 if __name__ == "__main__":
     opt = parse_opt()
     main(opt)
